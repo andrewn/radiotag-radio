@@ -9,6 +9,7 @@ module.exports = {
 function create() {
   var instance = new EventEmitter(),
       player = radiodan.player.get(1),
+      audio  = radiodan.audio.get('default'),
       stations;
 
   services.ready
@@ -37,6 +38,14 @@ function create() {
   instance.pause = function () {
     console.log('Radio: pause', instance.station);
     player.stop();
+  };
+
+  instance.volumeUp = function () {
+    audio.volume({ diff: 5 });
+  };
+
+  instance.volumeDown = function () {
+    audio.volume({ diff: -5 });
   };
 
   return instance;

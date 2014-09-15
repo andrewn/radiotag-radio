@@ -9,12 +9,16 @@ var fsm = StateMachine.create({
   events: [
     { name: 'loaded', from: 'loading', to: 'standby' },
     { name: 'power',  from: 'standby', to: 'playing' },
-    { name: 'power',  from: 'playing', to: 'standby' }
+    { name: 'power',  from: 'playing', to: 'standby' },
+    { name: 'volumeup',  from: 'playing', to: 'playing' },
+    { name: 'volumedown',  from: 'playing', to: 'playing' }
   ],
   callbacks: {
     oninit: init,
     onloaded: loaded,
-    onpower: power
+    onpower: power,
+    onvolumeup: volumeup,
+    onvolumedown: volumedown
   }
 });
 
@@ -27,6 +31,7 @@ function init(event, from, to, msg) {
 
 function loaded(event, from, to, msg) {
   log(arguments);
+  radio.pause();
 }
 
 function power(event, from, to, msg) {
@@ -38,6 +43,16 @@ function power(event, from, to, msg) {
     // stop radio
     radio.pause();
   }
+}
+
+function volumeup(event, from, to, msg) {
+  log(arguments);
+  radio.volumeUp();
+}
+
+function volumedown(event, from, to, msg) {
+  log(arguments);
+  radio.volumeDown();
 }
 
 /* Helpers */
