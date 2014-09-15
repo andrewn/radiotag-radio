@@ -9,6 +9,7 @@
   "author": "Andrew Nicolaou <andrew.nicolaou@bbc.co.uk>",
   "license": "Apache2",
   "dependencies": {
-    "javascript-state-machine": "~2.3.2"
+    "javascript-state-machine": "~2.3.2",
+    "hapi": "~6.8.1"
   }
 }
