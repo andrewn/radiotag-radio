@@ -3,9 +3,9 @@ var StateMachine = require('javascript-state-machine'),
 
 var fsm = StateMachine.create({
   initial:  { state: 'loading', event: 'init', defer: true },
-  error: function(eventName, from, to, args, errorCode, errorMessage) {
-    return 'event ' + eventName + ' not valid. ' + errorMessage;
-  },
+  // error: function(eventName, from, to, args, errorCode, errorMessage) {
+  //   return 'event ' + eventName + ' not valid. ' + errorMessage;
+  // },
   events: [
     { name: 'loaded', from: 'loading', to: 'standby' },
     { name: 'power',  from: 'standby', to: 'playing' },
