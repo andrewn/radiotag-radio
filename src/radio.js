@@ -1,4 +1,5 @@
 var EventEmitter = require('events').EventEmitter,
+    _ = require('lodash'),
     radiodan     = require('radiodan-client').create(),
     services     = require('./bbc-services').create().connect();
 
@@ -48,9 +49,41 @@ function create() {
     audio.volume({ diff: -5 });
   };
 
+  instance.stationNext = function () {
+    var stationId = findId(stations, instance.station, 1);
+
+    if (stationId) {
+      instance.station = stationId;
+      instance.play();
+    }
+  };
+
+  instance.stationPrevious = function () {
+    var stationId = findId(stations, instance.station, -1);
+
+    if (stationId) {
+      instance.station = stationId;
+      instance.play();
+    }
+  };
+
   return instance;
 }
 
+function findId(stations, currentId, offset) {
+  var index = _(stations).findIndex(
+    function (item) { return item.id === currentId }
+  ),
+  adjacent,
+  target = {};
+
+  if (index > -1) {
+    adjacentIndex = index + offset;
+    target = stations[adjacentIndex % stations.length];
+  }
+
+  return target.id;
+}
 
 function extractStream(service) {
   var url = {};

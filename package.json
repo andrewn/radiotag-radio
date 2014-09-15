@@ -13,6 +13,7 @@
     "hapi": "~6.8.1",
     "radiodan-client": "https://github.com/radiodan/radiodan-client.js/archive/master.tar.gz",
     "request": "~2.42.0",
-    "eventsource": "~0.1.2"
+    "eventsource": "~0.1.2",
+    "lodash": "~2.4.1"
   }
 }

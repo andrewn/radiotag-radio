@@ -3,8 +3,10 @@ var states = require('./states'),
 
 var Buttons = {
   power: '1',
-  volumeUp: '3',
-  volumeDown: '2'
+  stationPrevious: '2',
+  stationNext: '3',
+  volumeDown: '6',
+  volumeUp: '8'
 };
 
 var web;
@@ -27,6 +29,12 @@ module.exports = {
           break;
         case Buttons.volumeDown:
           states.volumedown();
+          break;
+        case Buttons.stationPrevious:
+          states.stationprevious();
+          break;
+        case Buttons.stationNext:
+          states.stationnext();
           break;
       }
     });
