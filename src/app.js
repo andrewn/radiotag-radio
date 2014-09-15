@@ -1,12 +1,12 @@
 var states = require('./states'),
-    Web    = require('./web');
+    ui     = require('./physical').create('http://localhost:4000/buttons');
 
 var Buttons = {
-  power: '1',
-  stationPrevious: '2',
-  stationNext: '3',
-  volumeDown: '6',
-  volumeUp: '8'
+  power: 0,
+  stationPrevious: 1,
+  stationNext: 2,
+  volumeDown: 5,
+  volumeUp: 7
 };
 
 var web;
@@ -16,8 +16,7 @@ module.exports = {
     config = config || {};
     states.init();
 
-    web = Web.create();
-    web.on('button', function (num) {
+    ui.on('button', function (num) {
       console.log('Button %s pressed', num);
 
       switch (num) {
