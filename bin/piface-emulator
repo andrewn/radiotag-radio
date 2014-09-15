@@ -1,0 +1,49 @@
+#!/usr/bin/env node
+
+var _ = require('lodash');
+
+var EventEmitter = require('events').EventEmitter,
+    express = require('express'),
+    port = process.env.PORT || 4000,
+    server = express(),
+    stream = require('express-eventsource')(),
+    state = createState();
+
+server.listen(port);
+
+console.log('Server running at:', port);
+
+server.use(express.static(__dirname + '/../static/'));
+
+server.get('/buttons/:num',
+  function (request, reply) {
+    var number = parseInt(request.params.num, 10);
+    reply.json(state.buttons[number]);
+  }
+);
+
+server.post('/buttons/:num',
+  function (request, reply) {
+    var number = parseInt(request.params.num, 10);
+    console.log('POST', request.path, number);
+
+    var button = _(state.buttons[number]).clone();
+    button.value = 1;
+    stream.send(button);
+
+    reply.redirect('back');
+  }
+);
+
+server.use('/buttons', stream.middleware());
+
+function createState() {
+  var state = {};
+
+  state.buttons = _.range(0, 7)
+                   .map(
+                    function (item, index) { return { id: index, value: 0 }; }
+                    );
+
+  return state;
+}

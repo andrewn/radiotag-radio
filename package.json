@@ -10,10 +10,11 @@
   "license": "Apache2",
   "dependencies": {
     "javascript-state-machine": "~2.3.2",
-    "hapi": "~6.8.1",
     "radiodan-client": "https://github.com/radiodan/radiodan-client.js/archive/master.tar.gz",
     "request": "~2.42.0",
     "eventsource": "~0.1.2",
-    "lodash": "~2.4.1"
+    "lodash": "~2.4.1",
+    "express": "~4.9.0",
+    "express-eventsource": "0.0.3"
   }
 }
