@@ -1,4 +1,5 @@
-var StateMachine = require('javascript-state-machine');
+var StateMachine = require('javascript-state-machine'),
+    radio        = require('./radio').create();
 
 var fsm = StateMachine.create({
   initial:  { state: 'loading', event: 'init', defer: true },
@@ -32,8 +33,10 @@ function power(event, from, to, msg) {
   log(arguments);
   if (to === 'playing') {
     // start radio
+    radio.play();
   } else if (to === 'standby') {
     // stop radio
+    radio.pause();
   }
 }
 
