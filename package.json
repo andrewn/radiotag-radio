@@ -15,6 +15,7 @@
     "eventsource": "~0.1.2",
     "lodash": "~2.4.1",
     "express": "~4.9.0",
-    "express-eventsource": "0.0.3"
+    "express-eventsource": "0.0.3",
+    "body-parser": "~1.8.2"
   }
 }
