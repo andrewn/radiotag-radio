@@ -1,5 +1,8 @@
 var states = require('./states'),
-    ui     = require('./physical').create('http://localhost:4000/buttons');
+    ui;
+
+// ui = require('./physical').connectWeb('http://localhost:4000/buttons');
+ui = require('./physical').connectSocket('./uds_socket');
 
 var Buttons = {
   power: 0,

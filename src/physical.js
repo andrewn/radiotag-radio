@@ -1,9 +1,12 @@
 var EventSource = require('eventsource'),
     EventEmitter = require('events').EventEmitter;
 
-module.exports = { create: create };
+module.exports = {
+  connectWeb: connectWeb,
+  connectSocket: connectSocket
+};
 
-function create(url) {
+function connectWeb(url) {
   var instance = new EventEmitter();
 
   var source = new EventSource(url);
@@ -16,6 +19,27 @@ function create(url) {
   source.onerror = function() {
     console.log('ERROR!');
   };
+
+  return instance;
+}
+
+function connectSocket(path) {
+  var instance = new EventEmitter();
+
+  var socket = require('net').connect(path, function () {
+    console.log('connected', arguments);
+    // socket.write('blah');
+    socket.on('data', function (buffer) {
+      var raw  = buffer.toString(),
+          data = JSON.parse(raw);
+      console.log('raw', raw);
+      console.log('data', data);
+      if (data.type === 'button' && data.id != null) {
+        console.log('emit', data.id);
+        instance.emit('button', data.id);
+      }
+    });
+  });
 
   return instance;
 }
