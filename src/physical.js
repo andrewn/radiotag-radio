@@ -41,5 +41,16 @@ function connectSocket(path) {
     });
   });
 
+  instance.display = function (line1, line2) {
+    send({
+      type: 'display',
+      lines: [line1 || '', line2 || '']
+    });
+  }
+
+  function send(message) {
+    socket.write(JSON.stringify(message) + '\n')
+  }
+
   return instance;
 }

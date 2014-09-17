@@ -8,15 +8,18 @@ import gevent.monkey
 from gevent.pywsgi import WSGIServer
 gevent.monkey.patch_all()
 
-from flask import Flask, request, redirect, Response, render_template
+from flask import Flask, request, redirect, jsonify, Response, render_template
 
 import os
 app_root = os.path.abspath(".")
 port = os.getenv('PORT', 4000)
 
+import json
+
 import pifacecad
 
 listener = pifacecad.SwitchEventListener()
+lcd = pifacecad.LCD()
 
 app = Flask(__name__)
 
@@ -28,6 +31,10 @@ def root():
 def set_button(num):
   listener.events[num](num)
   return redirect('/')
+
+@app.route('/text')
+def text():
+  return jsonify(lines=lcd.lines)
 
 http_server = WSGIServer(('127.0.0.1', port), app)
 print "Started on port " + str(port)

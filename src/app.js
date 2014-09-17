@@ -39,7 +39,13 @@ module.exports = {
           states.stationnext();
           break;
       }
+
+      updateDisplay(states);
     });
+
+    function updateDisplay(states) {
+      ui.display(states.current);
+    }
   },
   destroy: function () {
     if (states.current !== 'standby') {

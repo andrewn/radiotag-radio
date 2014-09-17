@@ -31,14 +31,32 @@ sock.bind(server_address)
 # Listen for incoming connections
 sock.listen(1)
 
+
+from piface_web import line_reader
+reader = line_reader.LineReader()
+
 # while True:
 # Wait for a connection
 print >>sys.stderr, 'waiting for a connection'
 connection, client_address = sock.accept()
 
+cad.lcd.write('hello')
+
+def handle_lcd_write(lines):
+    cad.lcd.set_cursor(0, 0)
+    cad.lcd.write(lines[0])
+    if lines[1]:
+        cad.lcd.set_cursor(0, 1)
+        cad.lcd.write(lines[1])
+
 def handle_button_event(num):
     data = {'type': 'button', 'id': num, 'value': 1}
     connection.sendall(json.dumps(data))
+
+def handle_incoming_message(msg):
+    data = json.loads(msg)
+    if data['type'] == 'display':
+        handle_lcd_write(data['lines'])
 
 listener = pifacecad.SwitchEventListener(chip=cad)
 listener.register(0, pifacecad.IODIR_RISING_EDGE, handle_button_event)
@@ -49,7 +67,22 @@ try:
 
     # Receive the data in small chunks and retransmit it
     while True:
-        data = connection.recv(16)
+
+        data = connection.recv(4096)
+
+        if len(data) == 0:
+            print 'socket has closed'
+            break;
+
+        reader.push(data)
+        messages = reader.process()
+
+        if messages:
+            print "Received %i messages" % len(messages)
+
+            for msg in messages:
+                handle_incoming_message(msg)
+
         # print >>sys.stderr, 'received "%s"' % data
         # if data:
         #     print 'got data'
