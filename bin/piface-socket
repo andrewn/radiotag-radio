@@ -10,7 +10,10 @@ debug = os.getenv('DEBUG', False)
 if debug:
     print 'Starting web server for debug'
     from piface_web import pifacecad
-    cad = pifacecad.PiFaceCAD()
+else:
+    import pifacecad
+
+cad = pifacecad.PiFaceCAD()
 
 server_address = './uds_socket'
 
