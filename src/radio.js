@@ -9,7 +9,7 @@ module.exports = {
 
 function create() {
   var instance = new EventEmitter(),
-      player = radiodan.player.get(1),
+      player = radiodan.player.get('main'),
       audio  = radiodan.audio.get('default'),
       stations;
 
