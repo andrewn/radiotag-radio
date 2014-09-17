@@ -24,27 +24,27 @@ module.exports = {
 
       switch (num) {
         case Buttons.power:
-          states.power();
+          transition('power');
           break;
         case Buttons.volumeUp:
-          states.volumeup();
+          transition('volumeup');
           break;
         case Buttons.volumeDown:
-          states.volumedown();
+          transition('volumedown');
           break;
         case Buttons.stationPrevious:
-          states.stationprevious();
+          transition('stationprevious');
           break;
         case Buttons.stationNext:
-          states.stationnext();
+          transition('stationnext');
           break;
       }
-
-      updateDisplay(states);
     });
 
-    function updateDisplay(states) {
-      ui.display(states.current);
+    function transition(target) {
+      if (states.can(target)) {
+        states[target](ui);
+      }
     }
   },
   destroy: function () {

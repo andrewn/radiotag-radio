@@ -42,11 +42,13 @@ function create() {
   };
 
   instance.volumeUp = function () {
-    audio.volume({ diff: 5 });
+    instance.volume += 5
+    audio.volume({ value: instance.volume });
   };
 
   instance.volumeDown = function () {
-    audio.volume({ diff: -5 });
+    instance.volume -= 5
+    audio.volume({ value: instance.volume });
   };
 
   instance.stationNext = function () {

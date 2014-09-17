@@ -28,45 +28,51 @@ var fsm = StateMachine.create({
 
 module.exports = fsm;
 
-function init(event, from, to, msg) {
+function init(event, from, to) {
   log(arguments);
   fsm.loaded();
 }
 
-function loaded(event, from, to, msg) {
+function loaded(event, from, to) {
   log(arguments);
   radio.pause();
 }
 
-function power(event, from, to, msg) {
+function power(event, from, to, ui) {
   log(arguments);
   if (to === 'playing') {
     // start radio
     radio.play();
+    ui.display(radio.station, 'Volume: ' + radio.volume);
   } else if (to === 'standby') {
     // stop radio
     radio.pause();
+    ui.display('Standby');
   }
 }
 
-function volumeup(event, from, to, msg) {
+function volumeup(event, from, to, ui) {
   log(arguments);
   radio.volumeUp();
+  ui.display(radio.station, 'Volume: ' + radio.volume);
 }
 
-function volumedown(event, from, to, msg) {
+function volumedown(event, from, to, ui) {
   log(arguments);
   radio.volumeDown();
+  ui.display(radio.station, 'Volume: ' + radio.volume);
 }
 
-function stationNext(event, from, to, msg) {
+function stationNext(event, from, to, ui) {
   log(arguments);
   radio.stationNext();
+  ui.display(radio.station);
 }
 
-function stationPrevious(event, from, to, msg) {
+function stationPrevious(event, from, to, ui) {
   log(arguments);
   radio.stationPrevious();
+  ui.display(radio.station);
 }
 
 
