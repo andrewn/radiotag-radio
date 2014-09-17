@@ -23,6 +23,10 @@ class LCD:
   def set_cursor(self, pos, line):
     self.current_line = line
 
+class InterruptEvent:
+  def __init__(self, pin_num):
+    self.pin_num = pin_num
+
 @singleton
 class SwitchEventListener:
   def __init__(self, chip=None):

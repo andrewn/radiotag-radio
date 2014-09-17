@@ -9,7 +9,7 @@ import json
 debug = os.getenv('DEBUG', False)
 if debug:
     print 'Starting web server for debug'
-    from piface_web import pifacecad
+    from piface_web import web, pifacecad
 else:
     import pifacecad
 
@@ -34,7 +34,7 @@ sock.bind(server_address)
 # Listen for incoming connections
 sock.listen(1)
 
-
+sys.path.append(os.path.abspath( __file__ + "/../.."))
 from piface_web import line_reader
 reader = line_reader.LineReader()
 
@@ -52,8 +52,11 @@ def handle_lcd_write(lines):
         cad.lcd.set_cursor(0, 1)
         cad.lcd.write(lines[1])
 
-def handle_button_event(num):
-    data = {'type': 'button', 'id': num, 'value': 1}
+def handle_button_event(event):
+    print event
+    data = {'type': 'button', 'id': event.pin_num, 'value': 1}
+    print 'handle_button_event'
+    print data
     connection.sendall(json.dumps(data))
 
 def handle_incoming_message(msg):
@@ -96,4 +99,5 @@ try:
         #     # break
 finally:
     # Clean up the connection
+    print "Cleaning up connection"
     connection.close()
