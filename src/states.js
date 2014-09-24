@@ -1,84 +1,89 @@
 var StateMachine = require('javascript-state-machine'),
     radio        = require('./radio').create();
 
-var fsm = StateMachine.create({
-  initial:  { state: 'loading', event: 'init', defer: true },
-  // error: function(eventName, from, to, args, errorCode, errorMessage) {
-  //   return 'event ' + eventName + ' not valid. ' + errorMessage;
-  // },
-  events: [
-    { name: 'loaded', from: 'loading', to: 'standby' },
-    { name: 'power',  from: 'standby', to: 'playing' },
-    { name: 'power',  from: 'playing', to: 'standby' },
-    { name: 'volumeup',  from: 'playing', to: 'playing' },
-    { name: 'volumedown',  from: 'playing', to: 'playing' },
-    { name: 'stationnext',  from: 'playing', to: 'playing' },
-    { name: 'stationprevious',  from: 'playing', to: 'playing' }
-  ],
-  callbacks: {
-    oninit: init,
-    onloaded: loaded,
-    onpower: power,
-    onvolumeup: volumeup,
-    onvolumedown: volumedown,
-    onstationnext: stationNext,
-    onstationprevious: stationPrevious
+var ui;
+
+module.exports = function (config) {
+  ui = config.ui;
+
+  var fsm = StateMachine.create({
+    initial:  { state: 'loading', event: 'init', defer: true },
+    // error: function(eventName, from, to, args, errorCode, errorMessage) {
+    //   return 'event ' + eventName + ' not valid. ' + errorMessage;
+    // },
+    events: [
+      { name: 'loaded', from: 'loading', to: 'standby' },
+      { name: 'power',  from: 'standby', to: 'playing' },
+      { name: 'power',  from: 'playing', to: 'standby' },
+      { name: 'volumeup',  from: 'playing', to: 'playing' },
+      { name: 'volumedown',  from: 'playing', to: 'playing' },
+      { name: 'stationnext',  from: 'playing', to: 'playing' },
+      { name: 'stationprevious',  from: 'playing', to: 'playing' }
+    ],
+    callbacks: {
+      oninit: init,
+      onloaded: loaded,
+      onpower: power,
+      onvolumeup: volumeup,
+      onvolumedown: volumedown,
+      onstationnext: stationNext,
+      onstationprevious: stationPrevious
+    }
+  });
+
+  function init(event, from, to) {
+    log(arguments);
+    fsm.loaded();
   }
-});
 
-module.exports = fsm;
-
-function init(event, from, to) {
-  log(arguments);
-  fsm.loaded();
-}
-
-function loaded(event, from, to) {
-  log(arguments);
-  radio.pause();
-}
-
-function power(event, from, to, ui) {
-  log(arguments);
-  if (to === 'playing') {
-    // start radio
-    radio.play();
-    ui.display(radio.station, 'Volume: ' + radio.volume);
-  } else if (to === 'standby') {
-    // stop radio
-    radio.pause();
+  function loaded(event, from, to) {
+    log(arguments);
     ui.display('Standby');
+    radio.pause();
   }
-}
 
-function volumeup(event, from, to, ui) {
-  log(arguments);
-  radio.volumeUp();
-  ui.display(radio.station, 'Volume: ' + radio.volume);
-}
+  function power(event, from, to) {
+    log(arguments);
+    if (to === 'playing') {
+      // start radio
+      radio.play();
+      ui.display(radio.station, 'Volume: ' + radio.volume);
+    } else if (to === 'standby') {
+      // stop radio
+      radio.pause();
+      ui.display('Standby');
+    }
+  }
 
-function volumedown(event, from, to, ui) {
-  log(arguments);
-  radio.volumeDown();
-  ui.display(radio.station, 'Volume: ' + radio.volume);
-}
+  function volumeup(event, from, to) {
+    log(arguments);
+    radio.volumeUp();
+    ui.display(radio.station, 'Volume: ' + radio.volume);
+  }
 
-function stationNext(event, from, to, ui) {
-  log(arguments);
-  radio.stationNext();
-  ui.display(radio.station);
-}
+  function volumedown(event, from, to) {
+    log(arguments);
+    radio.volumeDown();
+    ui.display(radio.station, 'Volume: ' + radio.volume);
+  }
 
-function stationPrevious(event, from, to, ui) {
-  log(arguments);
-  radio.stationPrevious();
-  ui.display(radio.station);
-}
+  function stationNext(event, from, to) {
+    log(arguments);
+    radio.stationNext();
+    ui.display(radio.station);
+  }
 
+  function stationPrevious(event, from, to) {
+    log(arguments);
+    radio.stationPrevious();
+    ui.display(radio.station);
+  }
 
+  /* Helpers */
+  function log(args) {
+    args = Array.prototype.slice.call(args, 0);
+    console.log.apply(console, ['  %s: %s -> %s (%s)'].concat(args) );
+  }
 
-/* Helpers */
-function log(args) {
-  args = Array.prototype.slice.call(args, 0);
-  console.log.apply(console, ['  %s: %s -> %s (%s)'].concat(args) );
+  return fsm;
 }

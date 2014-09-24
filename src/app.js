@@ -1,4 +1,4 @@
-var states = require('./states'),
+var statesFactory = require('./states'),
     ui;
 
 var Buttons = {
@@ -9,7 +9,8 @@ var Buttons = {
   volumeUp: 7
 };
 
-var web;
+var web,
+    states;
 
 module.exports = {
   init: function (config) {
@@ -22,6 +23,7 @@ module.exports = {
     // ui = require('./physical').connectWeb('http://localhost:4000/buttons');
     ui = require('./physical').connectSocket(config.socketPath);
 
+    states = statesFactory({ ui: ui });
     states.init();
 
     ui.on('button', function (num) {

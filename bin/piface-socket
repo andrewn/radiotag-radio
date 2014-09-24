@@ -37,6 +37,13 @@ sock.bind(server_address)
 # Listen for incoming connections
 sock.listen(1)
 
+def init_lcd():
+    cad.lcd.blink_off()
+    cad.lcd.clear()
+    cad.lcd.cursor_off()
+
+init_lcd()
+
 sys.path.append(os.path.abspath( __file__ + "/../.."))
 from piface_web import line_reader
 reader = line_reader.LineReader()
@@ -46,9 +53,8 @@ reader = line_reader.LineReader()
 print >>sys.stderr, 'waiting for a connection'
 connection, client_address = sock.accept()
 
-cad.lcd.write('hello')
-
 def handle_lcd_write(lines):
+    cad.lcd.clear()
     cad.lcd.set_cursor(0, 0)
     cad.lcd.write(lines[0])
     if lines[1]:
@@ -68,7 +74,8 @@ def handle_incoming_message(msg):
         handle_lcd_write(data['lines'])
 
 listener = pifacecad.SwitchEventListener(chip=cad)
-listener.register(0, pifacecad.IODIR_RISING_EDGE, handle_button_event)
+for pin in range(0, 8):
+    listener.register(pin, pifacecad.IODIR_RISING_EDGE, handle_button_event)
 listener.activate()
 
 try:

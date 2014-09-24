@@ -23,6 +23,15 @@ class LCD:
   def set_cursor(self, pos, line):
     self.current_line = line
 
+  def blink_off(self):
+    print "blink off"
+
+  def cursor_off(self):
+    print "cursor off"
+
+  def clear(self):
+    self.lines = [''] * 2
+
 class InterruptEvent:
   def __init__(self, pin_num):
     self.pin_num = pin_num
