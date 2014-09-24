@@ -69,6 +69,11 @@ function create() {
     }
   };
 
+  instance.currentInfo = function () {
+    console.log('Radio: currentInfo', instance.station);
+    return services.get(instance.station);
+  };
+
   return instance;
 }
 

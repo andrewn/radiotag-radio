@@ -1,5 +1,6 @@
 var StateMachine = require('javascript-state-machine'),
-    radio        = require('./radio').create();
+    radio        = require('./radio').create(),
+    tagger       = require('./tagger').create();
 
 var ui;
 
@@ -18,7 +19,8 @@ module.exports = function (config) {
       { name: 'volumeup',  from: 'playing', to: 'playing' },
       { name: 'volumedown',  from: 'playing', to: 'playing' },
       { name: 'stationnext',  from: 'playing', to: 'playing' },
-      { name: 'stationprevious',  from: 'playing', to: 'playing' }
+      { name: 'stationprevious',  from: 'playing', to: 'playing' },
+      { name: 'tag',  from: 'playing', to: 'tagging' },
     ],
     callbacks: {
       oninit: init,
@@ -27,7 +29,8 @@ module.exports = function (config) {
       onvolumeup: volumeup,
       onvolumedown: volumedown,
       onstationnext: stationNext,
-      onstationprevious: stationPrevious
+      onstationprevious: stationPrevious,
+      ontag: tag
     }
   });
 
@@ -77,6 +80,22 @@ module.exports = function (config) {
     log(arguments);
     radio.stationPrevious();
     ui.display(radio.station);
+  }
+
+  function tag(event, from, to) {
+    log(arguments);
+    var info = radio.currentInfo(),
+        dabStationId = info.dabId;
+
+    tagger.tag(dabStationId)
+          .then(
+            function (tag) { fsm.tagged(tag); },
+            function (error) {
+              console.error('Error', error.stack);
+            }
+          );
+
+    ui.display('Tagging...');
   }
 
   /* Helpers */

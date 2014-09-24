@@ -6,7 +6,8 @@ var Buttons = {
   stationPrevious: 1,
   stationNext: 2,
   volumeDown: 6,
-  volumeUp: 7
+  volumeUp: 7,
+  tag: 4
 };
 
 var web,
@@ -44,6 +45,9 @@ module.exports = {
           break;
         case Buttons.stationNext:
           transition('stationnext');
+          break;
+        case Buttons.tag:
+          transition('tag');
           break;
       }
     });
