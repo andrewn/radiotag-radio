@@ -1,6 +1,7 @@
 from event import Event
 
 IODIR_RISING_EDGE = 1
+IODIR_FALLING_EDGE = 2
 
 def singleton(class_):
   instances = {}
