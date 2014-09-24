@@ -5,7 +5,7 @@ var Buttons = {
   power: 0,
   stationPrevious: 1,
   stationNext: 2,
-  volumeDown: 5,
+  volumeDown: 6,
   volumeUp: 7
 };
 
