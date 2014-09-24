@@ -75,7 +75,7 @@ def handle_incoming_message(msg):
 
 listener = pifacecad.SwitchEventListener(chip=cad)
 for pin in range(0, 8):
-    listener.register(pin, pifacecad.IODIR_RISING_EDGE, handle_button_event)
+    listener.register(pin, pifacecad.IODIR_FALLING_EDGE, handle_button_event)
 listener.activate()
 
 try:
