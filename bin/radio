@@ -2,7 +2,11 @@
 
 var App = require('../src/app');
 
-App.init();
+var config = {
+  socketPath: process.argv[2]
+};
+
+App.init(config);
 
 process.on('SIGINT', function() {
     console.log("Caught interrupt signal");

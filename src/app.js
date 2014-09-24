@@ -1,9 +1,6 @@
 var states = require('./states'),
     ui;
 
-// ui = require('./physical').connectWeb('http://localhost:4000/buttons');
-ui = require('./physical').connectSocket('./uds_socket');
-
 var Buttons = {
   power: 0,
   stationPrevious: 1,
@@ -17,6 +14,14 @@ var web;
 module.exports = {
   init: function (config) {
     config = config || {};
+
+    if (!config.socketPath) {
+      throw new Error('config.socketPath is required');
+    }
+
+    // ui = require('./physical').connectWeb('http://localhost:4000/buttons');
+    ui = require('./physical').connectSocket(config.socketPath);
+
     states.init();
 
     ui.on('button', function (num) {
