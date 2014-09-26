@@ -1,6 +1,6 @@
 var StateMachine = require('javascript-state-machine'),
     radio        = require('./radio').create(),
-    tagger       = require('./tagger').create();
+    tagger       = require('./tagger').create('./db/storage');
 
 var ui;
 
@@ -21,8 +21,11 @@ module.exports = function (config) {
       { name: 'stationnext',  from: 'playing', to: 'playing' },
       { name: 'stationprevious',  from: 'playing', to: 'playing' },
       { name: 'tag',  from: 'playing', to: 'tagging' },
+      { name: 'unauthorised',  from: 'tagging', to: 'needToPair' },
+      { name: 'cancel',  from: 'needToPair', to: 'playing' }
     ],
     callbacks: {
+      // Transitions
       oninit: init,
       onloaded: loaded,
       onpower: power,
@@ -30,7 +33,13 @@ module.exports = function (config) {
       onvolumedown: volumedown,
       onstationnext: stationNext,
       onstationprevious: stationPrevious,
-      ontag: tag
+      ontag: tag,
+      onunauthorised: unauthorised,
+      oncancel: cancel,
+
+      // States
+      onenterplaying: playing,
+      onleaveplaying: playing
     }
   });
 
@@ -50,10 +59,17 @@ module.exports = function (config) {
     if (to === 'playing') {
       // start radio
       radio.play();
-      ui.display(radio.station, 'Volume: ' + radio.volume);
     } else if (to === 'standby') {
       // stop radio
       radio.pause();
+    }
+  }
+
+  function playing(event, from, to) {
+    log(arguments);
+    if (to === 'playing') {
+      ui.display(radio.station, 'Volume: ' + radio.volume);
+    } else if (to === 'standby') {
       ui.display('Standby');
     }
   }
@@ -85,17 +101,30 @@ module.exports = function (config) {
   function tag(event, from, to) {
     log(arguments);
     var info = radio.currentInfo(),
-        dabStationId = info.dabId;
+        dabStationId = info.dabId,
+        tagServiceUrl = config.tagServiceUrl;
 
-    tagger.tag(dabStationId)
+    tagger.tag(dabStationId, tagServiceUrl)
           .then(
             function (tag) { fsm.tagged(tag); },
             function (error) {
-              console.error('Error', error.stack);
+              console.error('Error', error.name);
+              if (error.name === 'NoAccessToken') {
+                console.error('Need to pair');
+                fsm.unauthorised();
+              }
             }
           );
 
     ui.display('Tagging...');
+  }
+
+  function unauthorised(event, from, to) {
+    fsm.cancel();
+  }
+
+  function cancel(event, from, to) {
+    fsm.playing();
   }
 
   /* Helpers */

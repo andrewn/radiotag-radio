@@ -3,8 +3,14 @@
 var App = require('../src/app');
 
 var config = {
-  socketPath: process.argv[2]
+  socketPath: process.argv[2],
+  tagServiceUrl: process.env.TAG_SERVICE_URL
 };
+
+if (!process.env.TAG_SERVICE_URL) {
+  console.error('TAG_SERVICE_URL not set');
+  process.exit(1);
+}
 
 App.init(config);
 

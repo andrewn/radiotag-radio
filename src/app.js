@@ -24,7 +24,7 @@ module.exports = {
     // ui = require('./physical').connectWeb('http://localhost:4000/buttons');
     ui = require('./physical').connectSocket(config.socketPath);
 
-    states = statesFactory({ ui: ui });
+    states = statesFactory({ ui: ui, tagServiceUrl: config.tagServiceUrl });
     states.init();
 
     ui.on('button', function (num) {
