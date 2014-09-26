@@ -18,6 +18,7 @@
     "express-eventsource": "0.0.3",
     "body-parser": "~1.8.2",
     "node-localstorage": "~0.3.4",
-    "radiotag.js": "git://github.com/radiodan/radiotag.js.git#browser-and-node"
+    "radiotag.js": "git://github.com/radiodan/radiotag.js.git#browser-and-node",
+    "cpa.js": "git://github.com/radiodan/cpa.js#browser-and-node"
   }
 }

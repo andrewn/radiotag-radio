@@ -22,7 +22,10 @@ module.exports = function (config) {
       { name: 'stationprevious',  from: 'playing', to: 'playing' },
       { name: 'tag',  from: 'playing', to: 'tagging' },
       { name: 'unauthorised',  from: 'tagging', to: 'needToPair' },
-      { name: 'cancel',  from: 'needToPair', to: 'playing' }
+      { name: 'pair',  from: 'needToPair', to: 'pairing' },
+      { name: 'usercode',  from: 'pairing', to: 'awaitAccessCode' },
+      { name: 'cancel',  from: 'needToPair', to: 'playing' },
+      { name: 'cancel',  from: 'pairing', to: 'playing' }
     ],
     callbacks: {
       // Transitions
@@ -36,8 +39,10 @@ module.exports = function (config) {
       ontag: tag,
       onunauthorised: unauthorised,
       oncancel: cancel,
+      onpair: pair,
+      onusercode: usercode,
 
-      // States
+      // Enter/Leave States
       onenterplaying: playing,
       onleaveplaying: playing
     }
@@ -120,11 +125,31 @@ module.exports = function (config) {
   }
 
   function unauthorised(event, from, to) {
-    fsm.cancel();
+    fsm.pair();
   }
 
   function cancel(event, from, to) {
     fsm.playing();
+  }
+
+  function pair(event, from, to) {
+    log(arguments);
+    var tagServiceUrl = config.tagServiceUrl;
+    tagger.getUserCode(tagServiceUrl, 'radiotag.api.bbci.co.uk')
+          .then(
+            function (data) {
+              fsm.usercode(data.url, data.userCode);
+            },
+            function (error) {
+              console.error('tagger.pair: error', error);
+              fsm.cancel();
+            }
+          );
+  }
+
+  function usercode(event, from, to, url, userCode) {
+    log(arguments);
+    ui.display('Visit: ' + url, 'Code: ' + userCode);
   }
 
   /* Helpers */
