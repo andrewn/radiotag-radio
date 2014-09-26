@@ -7,7 +7,8 @@ var Buttons = {
   stationNext: 2,
   volumeDown: 6,
   volumeUp: 7,
-  tag: 4
+  tag: 4,
+  reset: 3
 };
 
 var web,
@@ -48,6 +49,9 @@ module.exports = {
           break;
         case Buttons.tag:
           transition('tag');
+          break;
+        case Buttons.reset:
+          transition('reset');
           break;
       }
     });

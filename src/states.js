@@ -20,12 +20,17 @@ module.exports = function (config) {
       { name: 'volumedown',  from: 'playing', to: 'playing' },
       { name: 'stationnext',  from: 'playing', to: 'playing' },
       { name: 'stationprevious',  from: 'playing', to: 'playing' },
-      { name: 'tag',  from: 'playing', to: 'tagging' },
+      { name: 'tag',  from: ['playing', 'paired'], to: 'tagging' },
+      { name: 'tagged',  from: 'tagging', to: 'displayTag' },
+      { name: 'ok',  from: 'displayTag', to: 'playing' },
       { name: 'unauthorised',  from: 'tagging', to: 'needToPair' },
       { name: 'pair',  from: 'needToPair', to: 'pairing' },
-      { name: 'usercode',  from: 'pairing', to: 'awaitAccessCode' },
+      { name: 'usercode',  from: 'pairing', to: 'awaitAccessToken' },
+      { name: 'accesstoken',  from: 'awaitAccessToken', to: 'paired' },
       { name: 'cancel',  from: 'needToPair', to: 'playing' },
-      { name: 'cancel',  from: 'pairing', to: 'playing' }
+      { name: 'cancel',  from: 'pairing', to: 'playing' },
+      { name: 'cancel',  from: 'awaitAccessToken', to: 'playing' },
+      { name: 'reset',  from: '*', to: 'standby' }
     ],
     callbacks: {
       // Transitions
@@ -37,10 +42,13 @@ module.exports = function (config) {
       onstationnext: stationNext,
       onstationprevious: stationPrevious,
       ontag: tag,
+      ontagged: tagged,
       onunauthorised: unauthorised,
       oncancel: cancel,
       onpair: pair,
       onusercode: usercode,
+      onaccesstoken: accessToken,
+      onreset: reset,
 
       // Enter/Leave States
       onenterplaying: playing,
@@ -111,7 +119,10 @@ module.exports = function (config) {
 
     tagger.tag(dabStationId, tagServiceUrl)
           .then(
-            function (tag) { fsm.tagged(tag); },
+            function (tag) {
+              console.log('tag', tag);
+              fsm.tagged(tag);
+            },
             function (error) {
               console.error('Error', error.name);
               if (error.name === 'NoAccessToken') {
@@ -124,11 +135,20 @@ module.exports = function (config) {
     ui.display('Tagging...');
   }
 
+  function tagged(event, from, to, tagInfo) {
+    log(arguments);
+    ui.display('Tagged', tagInfo.title);
+    // Display message for 3s and then clear
+    setTimeout(function () { fsm.ok(); }, 3000);
+  }
+
   function unauthorised(event, from, to) {
+    log(arguments);
     fsm.pair();
   }
 
   function cancel(event, from, to) {
+    log(arguments);
     fsm.playing();
   }
 
@@ -138,6 +158,7 @@ module.exports = function (config) {
     tagger.getUserCode(tagServiceUrl, 'radiotag.api.bbci.co.uk')
           .then(
             function (data) {
+              console.log('pair:', data);
               fsm.usercode(data.url, data.userCode);
             },
             function (error) {
@@ -150,6 +171,29 @@ module.exports = function (config) {
   function usercode(event, from, to, url, userCode) {
     log(arguments);
     ui.display('Visit: ' + url, 'Code: ' + userCode);
+
+    tagger.getAccessToken()
+          .then(
+            function (accessToken) {
+              console.log('accessToken', accessToken);
+              fsm.accesstoken(accessToken);
+            },
+            function (error) {
+              console.err('error', accessToken);
+              fsm.cancel();
+            }
+          );
+  }
+
+  function accessToken(event, from, to, accessToken) {
+    log(arguments);
+    ui.display('Paired', tagger.userName() || '');
+    fsm.tag();
+  }
+
+  function reset(event, from, to) {
+    ui.display('RESET');
+    tagger.reset();
   }
 
   /* Helpers */

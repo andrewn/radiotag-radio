@@ -9,6 +9,12 @@ module.exports = {
   create: create
 };
 
+function accessTokenExistsError() {
+  var error = new Error('Access token already exists');
+  error.name = 'AccessTokenExists';
+  return error;
+}
+
 function noAccessTokenError() {
   var error = new Error('No access token found');
   error.name = 'NoAccessToken';
@@ -56,9 +62,18 @@ function create(configStorePath) {
 
   // TODO: What happens when accessToken is already here?
   instance.getUserCode = function (serviceUri, domain /* optional */) {
-    var dfd = defer();
+    var dfd = defer(),
+        accessToken = storage.getItem('accesToken'),
+        deviceCode = storage.getItem('deviceCode');
 
-    if (serviceUri == null) {
+    if (accessToken) {
+      dfd.reject( accessTokenExistsError() );
+    } else if (deviceCode) {
+      dfd.resolve({
+        url: storage.getItem('verificationUrl'),
+        userCode: storage.getItem('userCode')
+      });
+    } else if (serviceUri == null) {
       dfd.reject( noServiceUriError() );
     } else {
       console.log('tagger.pair: ', serviceUri);
@@ -69,9 +84,9 @@ function create(configStorePath) {
         .then(
           function (data) {
             dfd.resolve({
-              url: data.user.verification_uri,
-              userCode: data.user.user_code
-            })
+              url: storage.getItem('verificationUrl'),
+              userCode: storage.getItem('userCode')
+            });
           },
           dfd.reject
         );
@@ -80,22 +95,89 @@ function create(configStorePath) {
     return dfd.promise;
   };
 
+  instance.userName = function () {
+    return storage.getItem('username');
+  };
+
+  instance.getAccessToken = function () {
+    var dfd = defer();
+
+    var pollIntervalInSecs = storage.getItem('accessTokenPollInterval') * 1000;
+
+    console.log('pollIntervalInSecs', pollIntervalInSecs);
+
+    /* Does a single request for access token
+       and resolve, rejects or schedules another request
+    */
+    function requestAccessToken() {
+      process.stdout.write('.');
+
+      cpa.device.requestUserAccessToken(
+        storage.getItem('authProviderBaseUrl'),
+        storage.getItem('clientId'),
+        storage.getItem('clientSecret'),
+        storage.getItem('deviceCode'),
+        storage.getItem('domain'),
+        function (error, data) {
+          if (error) {
+            console.log('reject ', error);
+            dfd.reject(error);
+          } else if (data) {
+            console.log('  access token data: ', data);
+            storage.setItem('accessToken', data.access_token);
+            storage.setItem('username', data.user_name);
+            dfd.resolve(data.access_token);
+          } else {
+            console.log('set timeout')
+            setTimeout(requestAccessToken, pollIntervalInSecs);
+          }
+        }
+      );
+    }
+
+    var accessToken = storage.getItem('accessToken');
+
+    if (accessToken) {
+      console.log('tagger.getAccessToken: already have access token', accessToken)
+      dfd.resolve(accessToken);
+    } else {
+      console.log('no access token, polling');
+      requestAccessToken();
+    }
+
+    return dfd.promise;
+  };
+
+  instance.reset = function () {
+    [ 'username', 'accessToken', 'accessTokenPollInterval', 'authProviderBaseUrl', 'clientId', 'clientSecret', 'deviceCode', 
+      'domain', 'modes', 'serviceUrl', 'userCode', 'verificationUrl'
+    ].forEach(function (key) {
+      storage.removeItem(key);
+    });
+  };
+
   function authProvider(uri, domain) {
     var dfd = defer();
 
+    console.log('authProvider', uri, domain)
+
     radiotag.getAuthProvider(uri, function (error, authProviderBaseUrl, modes) {
       if (error) {
+        console.error('  error', error)
         dfd.reject(error);
       } else {
         console.log('  authProviderBaseUrl: ', authProviderBaseUrl);
         console.log('  modes: ', modes);
-        dfd.resolve({
-          // stationId: stationId,
-          uri: uri,
-          domain: domain,
-          authProviderBaseUrl: authProviderBaseUrl,
-          modes: modes
-        });
+        storage.setItem('serviceUrl', uri);
+        storage.setItem('domain', domain);
+        storage.setItem('authProviderBaseUrl', authProviderBaseUrl);
+        try {
+          storage.setItem('modes', JSON.stringify(modes));
+        } catch (e) {
+          console.error('error serialising modes', modes);
+        }
+
+        dfd.resolve();
       }
     });
 
@@ -105,18 +187,17 @@ function create(configStorePath) {
   /*
     Register for a clientId and clientSecret
   */
-  function register(params) {
-    var dfd = defer();
+  function register() {
+    console.log('register');
+
+    var dfd = defer(),
+        authProviderBaseUrl = storage.getItem('authProviderBaseUrl');
 
     console.log('\nCPA register');
-    console.log('  authProviderBaseUrl', params.authProviderBaseUrl);
-
-    console.log('  domain', params.domain);
-    params.domain = params.domain || radiotag.utils.getDomain(params.uri);
-    console.log('  domain', params.domain);
+    console.log('  authProviderBaseUrl', authProviderBaseUrl);
 
     cpa.device.registerClient(
-      params.authProviderBaseUrl,
+      authProviderBaseUrl,
       'My Device Name',
       'radiotag-radio-test',
       '0.0.1',
@@ -126,9 +207,11 @@ function create(configStorePath) {
         } else {
           console.log('\nRegistered:');
           console.log('  clientId %s, clientSecret %s', clientId, clientSecret);
-          params.clientId = clientId;
-          params.clientSecret = clientSecret;
-          dfd.resolve(params);
+
+          storage.setItem('clientId', clientId);
+          storage.setItem('clientSecret', clientSecret);
+
+          dfd.resolve();
         }
       }
     );
@@ -140,26 +223,32 @@ function create(configStorePath) {
     CPA:
       Get a user code to show to user
   */
-  function requestUserCode(params) {
-    var dfd = defer();
-    console.log('\nCPA request user code with ');
-    console.log('  authProvider', params.authProviderBaseUrl);
-    console.log('  clientId', params.clientId);
-    console.log('  clientSecret', params.clientSecret);
-    console.log('  domain', params.domain);
+  function requestUserCode() {
+    var dfd    = defer(),
+        domain = storage.getItem('domain');
+
+    if (!domain) {
+      domain = radiotag.utils.getDomain( storage.getItem('serviceUrl') );
+      storage.setItem('domain', domain);
+    }
 
     cpa.device.requestUserCode(
-      params.authProviderBaseUrl,
-      params.clientId,
-      params.clientSecret,
-      params.domain,
+      storage.getItem('authProviderBaseUrl'),
+      storage.getItem('clientId'),
+      storage.getItem('clientSecret'),
+      storage.getItem('domain'),
       function (error, data) {
         if (error) {
           dfd.reject(error);
         } else {
-          console.log('Got user code');
-          params.user = data;
-          dfd.resolve(params);
+          console.log('Got user code', data);
+
+          storage.setItem('verificationUrl', data.verification_uri);
+          storage.setItem('userCode', data.user_code);
+          storage.setItem('deviceCode', data.device_code);
+          storage.setItem('accessTokenPollInterval', data.interval);
+
+          dfd.resolve();
         }
       }
     );
