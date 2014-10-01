@@ -3,11 +3,23 @@
 import socket
 import sys
 import os
+import signal
 
 import json
 
 if len(sys.argv) < 2:
     sys.exit('Usage: %s <socket-file-path>' % sys.argv[0])
+
+connection = None
+listener = None
+
+# Catch term and exit
+def clean_shutdown():
+    connection.close()
+    listener.deactivate()
+    sys.exit(1)
+
+signal.signal(signal.SIGTERM, clean_shutdown)
 
 server_address = sys.argv[1]
 
@@ -41,6 +53,7 @@ def init_lcd():
     cad.lcd.blink_off()
     cad.lcd.clear()
     cad.lcd.cursor_off()
+    cad.lcd.backlight_on()
 
 init_lcd()
 
@@ -110,4 +123,5 @@ try:
 finally:
     # Clean up the connection
     print "Cleaning up connection"
-    connection.close()
+    clean_shutdown()
+    

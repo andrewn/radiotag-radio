@@ -30,6 +30,12 @@ class LCD:
   def cursor_off(self):
     print "cursor off"
 
+  def backlight_on(self):
+    print "backlight on"
+
+  def backlight_off(self):
+    print "backlight off"
+
   def clear(self):
     self.lines = [''] * 2
 
