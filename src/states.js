@@ -170,7 +170,7 @@ module.exports = function (config) {
 
   function usercode(event, from, to, url, userCode) {
     log(arguments);
-    ui.display('Visit: ' + url, 'Code: ' + userCode);
+    ui.display(url, 'Code: ' + userCode);
 
     tagger.getAccessToken()
           .then(
