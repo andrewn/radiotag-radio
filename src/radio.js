@@ -71,6 +71,13 @@ function create() {
     }
   };
 
+
+  instance.stationDisplayName = function () {
+    var info = services.get(instance.station),
+        title = info && info.title ? info.title : instance.station;
+    return title;
+  };
+
   instance.currentInfo = function () {
     console.log('Radio: currentInfo', instance.station);
     return services.get(instance.station);
