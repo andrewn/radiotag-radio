@@ -55,6 +55,9 @@ class SwitchEventListener:
   def activate(self):
     print "activated"
 
+  def deactivate(self):
+    print "deactivated"
+
 class PiFaceCAD:
   def __init__(self):
     self.SwitchEventListener = SwitchEventListener
