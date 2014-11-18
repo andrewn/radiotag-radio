@@ -165,14 +165,6 @@ try:
             for msg in messages:
                 handle_incoming_message(msg)
 
-        # print >>sys.stderr, 'received "%s"' % data
-        # if data:
-        #     print 'got data'
-        #     # print >>sys.stderr, 'sending data back to the client'
-        #     # connection.sendall(data)
-        # else:
-        #     print >>sys.stderr, 'no more data from', client_address
-        #     # break
 finally:
     # Clean up the connection
     print "Cleaning up connection"
