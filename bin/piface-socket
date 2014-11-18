@@ -12,11 +12,13 @@ if len(sys.argv) < 2:
 
 connection = None
 listener = None
+lcd_text_manager = None
 
 # Catch term and exit
 def clean_shutdown():
     connection.close()
     listener.deactivate()
+    lcd_text_manager.stop()
     sys.exit(1)
 
 signal.signal(signal.SIGTERM, clean_shutdown)
@@ -57,6 +59,51 @@ def init_lcd():
 
 init_lcd()
 
+import time
+import threading
+class LCDTextManager(threading.Thread):
+    def __init__(self, lcd_write_func, seconds):
+        self.lcd_write_func = lcd_write_func
+        self.runTime = seconds
+        self.buffers = ['', '']
+        self.cursors = [0, 0]
+        self.limit = 17
+        threading.Thread.__init__(self)
+
+    def lines(self, lines):
+        if lines[0] != self.buffers[0]:
+            self.cursors[0] = 0
+            self.buffers[0] = lines[0]
+        self.write()
+
+    def update(self):
+        if len(self.buffers[0]) >= self.limit:
+            self.cursors[0] += 1
+        self.write()
+        time.sleep(self.runTime)
+        self.update()
+
+    def write(self):
+        self.lcd_write_func([
+            self.get_line(self.buffers[0], self.cursors[0], self.limit),
+            self.get_line(self.buffers[1], self.cursors[1], self.limit)
+        ])
+
+    def get_line(self, line, cursor, limit):
+        wrapped_cursor_pos = cursor % limit
+        sliced = line[wrapped_cursor_pos:limit]
+        is_str_over_limit = len(line) >= limit
+        is_sliced_over_limit = len(sliced) < limit
+        if is_str_over_limit and is_sliced_over_limit:
+            sliced += '  ' + line
+        return sliced[0:limit]
+
+    def run(self):
+        self.update()
+
+    def stop(self):
+        self.lines(['', ''])
+
 sys.path.append(os.path.abspath( __file__ + "/../.."))
 from piface_web import line_reader
 reader = line_reader.LineReader()
@@ -65,6 +112,9 @@ reader = line_reader.LineReader()
 # Wait for a connection
 print >>sys.stderr, 'waiting for a connection'
 connection, client_address = sock.accept()
+
+def handle_scrolling_writer(lines):
+    lcd_text_manager.lines(lines)
 
 def handle_lcd_write(lines):
     cad.lcd.clear()
@@ -84,7 +134,10 @@ def handle_button_event(event):
 def handle_incoming_message(msg):
     data = json.loads(msg)
     if data['type'] == 'display':
-        handle_lcd_write(data['lines'])
+        handle_scrolling_writer(data['lines'])
+
+lcd_text_manager = LCDTextManager(handle_lcd_write, 1)
+lcd_text_manager.start()
 
 listener = pifacecad.SwitchEventListener(chip=cad)
 for pin in range(0, 8):
