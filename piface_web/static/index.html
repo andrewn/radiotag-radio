@@ -3,7 +3,7 @@
   <head>
     <script>window.times = {start: new Date};</script>
     <style type="text/css">
-      body { font-family: sans-serif; }
+      body { font-family: monospace; }
       form { display: inline-block; }
     </style>
   </head>
@@ -66,8 +66,8 @@
 
       function update(data) {
         console.log('data', data);
-        line1.innerText = data.lines[0];
-        line2.innerText = data.lines[1];
+        line1.innerText = data.lines[0].substring(0, 16);
+        line2.innerText = data.lines[1].substring(0, 16);
         return Promise.resolve();
       }
 
