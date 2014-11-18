@@ -62,6 +62,13 @@ init_lcd()
 import time
 import threading
 class LCDTextManager(threading.Thread):
+    @classmethod
+    def create(cls, lcd_write_func, seconds):
+        instance = cls(lcd_write_func, seconds)
+        instance.daemon = True
+        instance.start()
+        return instance
+
     def __init__(self, lcd_write_func, seconds):
         self.lcd_write_func = lcd_write_func
         self.runTime = seconds
@@ -136,8 +143,7 @@ def handle_incoming_message(msg):
     if data['type'] == 'display':
         handle_scrolling_writer(data['lines'])
 
-lcd_text_manager = LCDTextManager(handle_lcd_write, 1)
-lcd_text_manager.start()
+lcd_text_manager = LCDTextManager.create(handle_lcd_write, 1)
 
 listener = pifacecad.SwitchEventListener(chip=cad)
 for pin in range(0, 8):
