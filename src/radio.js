@@ -20,7 +20,9 @@ function create() {
           });
 
   instance.station = '6music';
-  instance.volume  = 0;
+  instance.volume  = 80;
+
+  audio.volume({ value: instance.volume });
 
   instance.play = function () {
     console.log('Radio: play', instance.station);
