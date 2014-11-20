@@ -10,6 +10,8 @@ import json
 if len(sys.argv) < 2:
     sys.exit('Usage: %s <socket-file-path>' % sys.argv[0])
 
+scrolling_update_time_interval_secs = 1.5
+
 connection = None
 listener = None
 lcd_text_manager = None
@@ -73,6 +75,7 @@ class LCDTextManager(threading.Thread):
         self.lcd_write_func = lcd_write_func
         self.runTime = seconds
         self.buffers = ['', '']
+        self.trimmed = ['', '']
         self.cursors = [0, 0]
         self.limit = 17
         threading.Thread.__init__(self)
@@ -81,20 +84,32 @@ class LCDTextManager(threading.Thread):
         if lines[0] != self.buffers[0]:
             self.cursors[0] = 0
             self.buffers[0] = lines[0]
-        self.write()
+        if lines[1] != self.buffers[1]:
+            self.cursors[1] = 0
+            self.buffers[1] = lines[1]
 
     def update(self):
         if len(self.buffers[0]) >= self.limit:
             self.cursors[0] += 1
+        if len(self.buffers[1]) >= self.limit:
+            self.cursors[1] += 1
         self.write()
         time.sleep(self.runTime)
         self.update()
 
     def write(self):
-        self.lcd_write_func([
-            self.get_line(self.buffers[0], self.cursors[0], self.limit),
-            self.get_line(self.buffers[1], self.cursors[1], self.limit)
-        ])
+        should_write = False
+        trimmed_0 = self.get_line(self.buffers[0], self.cursors[0], self.limit)
+        trimmed_1 = self.get_line(self.buffers[1], self.cursors[1], self.limit)
+        if self.trimmed[0] != trimmed_0:
+            self.trimmed[0] = trimmed_0
+            should_write = True
+        if self.trimmed[1] != trimmed_1:
+            self.trimmed[1] = trimmed_1
+            should_write = True
+
+        if should_write:
+            self.lcd_write_func([trimmed_0, trimmed_1])
 
     def get_line(self, line, cursor, limit):
         wrapped_cursor_pos = cursor % limit
@@ -143,7 +158,7 @@ def handle_incoming_message(msg):
     if data['type'] == 'display':
         handle_scrolling_writer(data['lines'])
 
-lcd_text_manager = LCDTextManager.create(handle_lcd_write, 1)
+lcd_text_manager = LCDTextManager.create(handle_lcd_write, scrolling_update_time_interval_secs)
 
 listener = pifacecad.SwitchEventListener(chip=cad)
 for pin in range(0, 8):
