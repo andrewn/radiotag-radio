@@ -81,7 +81,7 @@ module.exports = function (config) {
   function playing(event, from, to) {
     log(arguments);
     if (to === 'playing') {
-      ui.display(radio.stationDisplayName(), 'Vol: ' + radio.volume);
+      updateDisplay();
     } else if (to === 'standby') {
       ui.display('Standby');
     }
@@ -90,25 +90,25 @@ module.exports = function (config) {
   function volumeup(event, from, to) {
     log(arguments);
     radio.volumeUp();
-    ui.display(radio.station, 'Vol: ' + radio.volume);
+    updateDisplay();
   }
 
   function volumedown(event, from, to) {
     log(arguments);
     radio.volumeDown();
-    ui.display(radio.station, 'Vol: ' + radio.volume);
+    updateDisplay();
   }
 
   function stationNext(event, from, to) {
     log(arguments);
     radio.stationNext();
-    ui.display(radio.stationDisplayName());
+    updateDisplay();
   }
 
   function stationPrevious(event, from, to) {
     log(arguments);
     radio.stationPrevious();
-    ui.display(radio.stationDisplayName());
+    updateDisplay();
   }
 
   function tag(event, from, to) {
@@ -200,6 +200,10 @@ module.exports = function (config) {
   function log(args) {
     args = Array.prototype.slice.call(args, 0);
     console.log.apply(console, ['  %s: %s -> %s (%s)'].concat(args) );
+  }
+
+  function updateDisplay() {
+    ui.display(radio.stationDisplayName(), 'Vol: ' + radio.volume);
   }
 
   return fsm;
